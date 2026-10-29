@@ -1,0 +1,12 @@
+{
+  "text": "Hello! My voice is running locally on this Mac.",
+  "language": "en",
+  "reference": "LJ Speech LJ001-0001 (public domain)",
+  "model": "GPT-SoVITS v2ProPlus",
+  "upstreamCommit": "b4570b876f5c086819ba84e3215472733c6a7b70",
+  "modelRevision": "8f8857563c040d542de108a2c18b0425abd6c9c5",
+  "device": "cpu",
+  "sampleRate": 32000,
+  "seconds": 3.34,
+  "sha256": "841e469b8bce6eae41786e9ecb885ceccba60482c61538fcaffdd3f5f80ad4be"
+}

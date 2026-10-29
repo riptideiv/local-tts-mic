@@ -1,0 +1,42 @@
+[
+  {
+    "id": "starter-en",
+    "name": "English · LJ",
+    "language": "en",
+    "dataset": "klein-ml/LJSpeech-1.1-24KHz",
+    "split": "train",
+    "row": 0,
+    "filename": "LJ001-0001.flac",
+    "transcript": "Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition",
+    "source": "LJ Speech, LJ001-0001. https://keithito.com/LJ-Speech-Dataset/",
+    "license": "Public domain. Reference recording by Linda Johnson, via LibriVox.",
+    "sha256": "1c8a7a3379e4df62f207c47525426ae594501ff21a873a546584d2dfc5401c98",
+    "optional": false
+  },
+  {
+    "id": "starter-zh",
+    "name": "中文 · AISHELL",
+    "language": "zh",
+    "filename": "SSB00050353.wav",
+    "url": "https://huggingface.co/datasets/AISHELL/AISHELL-3/resolve/main/test/wav/SSB0005/SSB00050353.wav",
+    "transcript": "深交所副总经理周明指出",
+    "source": "AISHELL-3, speaker SSB0005. https://www.openslr.org/93/",
+    "license": "Apache License 2.0. Beijing Shell Shell Technology Co., Ltd.",
+    "sha256": "e5f8e2417a89ce2418c59d419be999b46206890d1f094b76f77ad4d41b365bca",
+    "optional": false
+  },
+  {
+    "id": "starter-ja",
+    "name": "日本語 · JSUT",
+    "language": "ja",
+    "dataset": "japanese-asr/ja_asr.jsut_basic5000",
+    "split": "test",
+    "row": 0,
+    "filename": "BASIC5000_0001.wav",
+    "transcript": "水をマレーシアから買わなくてはならないのです。",
+    "source": "JSUT BASIC5000_0001, University of Tokyo. https://sites.google.com/site/shinnosuketakamichi/publication/jsut",
+    "license": "Audio: personal use and non-commercial research. Commercial use requires permission from the corpus authors. Text: see original corpus LICENSE (CC BY-SA 4.0 etc.). Do not redistribute the corpus.",
+    "sha256": "11f13d4b52cecdb330cb3d87026a23d2c62fb4c91b0bb9c197319dbdb4f678ed",
+    "optional": true
+  }
+]

@@ -1,0 +1,7 @@
+#!/bin/bash
+# Installer runs this as root. The user is switching to the native microphone.
+set -euo pipefail
+if [ "${3:-/}" = / ]; then
+    /usr/bin/killall coreaudiod || true
+fi
+exit 0

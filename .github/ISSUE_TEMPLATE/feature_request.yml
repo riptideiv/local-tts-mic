@@ -1,0 +1,10 @@
+name: Feature request
+description: Suggest an improvement grounded in how you use Local TTS Mic.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What are you trying to do?
+      description: Describe the use case, current workaround, and desired result.
+    validations:
+      required: true

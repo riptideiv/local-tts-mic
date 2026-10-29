@@ -1,0 +1,22 @@
+name: Bug report
+description: Report setup, synthesis, or routing trouble.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include what you expected and how to reproduce it. Keep private text and audio out of the report.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: App version / commit, macOS version, Mac chip and RAM, CPU or MPS
+    validations:
+      required: true
+  - type: textarea
+    id: diagnosis
+    attributes:
+      label: Diagnostics
+      description: Paste python3 scripts/doctor.py output and relevant log lines. Remove personal paths, transcripts, device IDs, and voice references first. Mention whether private Preview and Send test tone work.
