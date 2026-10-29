@@ -60,7 +60,7 @@ final class PlaybackTests: XCTestCase {
         worker.emit("audio", model.jobs[0].id)
         audio.callbacks[0](.failure(LocalError("Playback failed")))
         XCTAssertEqual(model.jobs.map(\.status), ["Failed", "Queued"])
-        try await Task.sleep(for: .milliseconds(60))
+        try await waitUntil("worker restart") { worker.starts == 1 }
         XCTAssertEqual(worker.starts, 1)
         XCTAssertFalse(model.ready)
         worker.emit("ready")
@@ -75,7 +75,7 @@ final class PlaybackTests: XCTestCase {
         let first = model.jobs[0].id
         worker.emit("audio", first)
         worker.emit("complete", first)
-        try await Task.sleep(for: .milliseconds(180))
+        try await waitUntil("next queued message starts") { model.jobs[1].status == "Generating" }
         XCTAssertEqual(model.jobs.map(\.status), ["Failed", "Generating"])
         audio.callbacks[0](.success(()))
         XCTAssertEqual(model.jobs[1].status, "Generating")
@@ -86,7 +86,7 @@ final class PlaybackTests: XCTestCase {
         let model = makeModel(worker, audio, grace: 0.01, synthesisGrace: 0.01)
         XCTAssertTrue(model.submit(text: "First", delivery: .preview))
         XCTAssertTrue(model.submit(text: "Second", delivery: .preview))
-        try await Task.sleep(for: .milliseconds(60))
+        try await waitUntil("worker restart") { worker.starts == 1 }
         XCTAssertEqual(model.jobs.map(\.status), ["Failed", "Queued"])
         XCTAssertEqual(worker.starts, 1)
         worker.emit("ready")
@@ -138,6 +138,14 @@ final class PlaybackTests: XCTestCase {
         XCTAssertEqual(model.jobs.last?.voice.id, "other")
         XCTAssertEqual(model.jobs.last?.language, "ja")
         XCTAssertEqual(model.jobs.last?.delivery, .preview)
+    }
+
+    @MainActor private func waitUntil(_ description: String, condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while !condition() {
+            guard ContinuousClock.now < deadline else { XCTFail("Timed out waiting for \(description)"); return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
     }
 
     @MainActor private func makeModel(_ worker: FakeWorker, _ audio: FakeAudio, grace: Double = 3, playbackGrace: Double = 8, synthesisGrace: Double = 90) -> AppModel {
