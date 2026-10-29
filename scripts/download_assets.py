@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import urllib.parse
@@ -11,7 +12,7 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / "runtime"
+RUNTIME = Path(os.environ.get("LOCALSPEAK_ROOT", ROOT)) / "runtime"
 GSV = RUNTIME / "GPT-SoVITS"
 MODELS = GSV / "GPT_SoVITS/pretrained_models"
 CHECKSUMS = json.loads((ROOT / "resources/asset-checksums.json").read_text())

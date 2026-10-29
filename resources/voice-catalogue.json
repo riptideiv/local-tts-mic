@@ -1,0 +1,104 @@
+[
+  {
+    "id": "btr-hitori-gotoh",
+    "name": "Hitori Gotoh",
+    "summary": "Community character voice by lpkpaco. Japanese reference; the author also lists English and Chinese support.",
+    "repository": "lpkpaco/Bocchi-The-Rock-GPT-SoVITS-Models",
+    "revision": "8f0c784237349e5ad7d468cffd359316a1a9ed5e",
+    "modelVersion": "v2ProPlus",
+    "language": "ja",
+    "transcript": "人様の前で演奏できるように毎日6時間練習を続けた結果",
+    "reference": "models/Hitori_Gotoh/reference_audio/人様の前で演奏できるように毎日6時間練習を続けた結果.wav",
+    "gpt": "models/Hitori_Gotoh/v2ProPlus/gotoh-v1-3-1/GPT/gotoh-v1-3-1-e16.ckpt",
+    "sovits": "models/Hitori_Gotoh/v2ProPlus/gotoh-v1-3-1/SoVITS/gotoh-v1-3-1_e8_s368.pth",
+    "license": "CC BY-NC-SA 4.0 (model card). Non-commercial; attribution and share-alike. Review the author’s notices and underlying voice rights.",
+    "files": [
+      {
+        "path": "models/Hitori_Gotoh/v2ProPlus/gotoh-v1-3-1/GPT/gotoh-v1-3-1-e16.ckpt",
+        "size": 155313376,
+        "sha256": "a0903b5e96ec8754190635d765456b450ec7e4079777c1d2505676a7547a42f9",
+        "gitSHA1": "48d7dd88f6906992232fe1dcfaef5a2f4e13c1a5"
+      },
+      {
+        "path": "models/Hitori_Gotoh/v2ProPlus/gotoh-v1-3-1/SoVITS/gotoh-v1-3-1_e8_s368.pth",
+        "size": 172765363,
+        "sha256": "a60c724a972635816a39d7f767e22b652578af3d96aaaeb2a9efde0622722198",
+        "gitSHA1": "0281f350a27dffe2230c25b3b6e2987d57cddc9c"
+      },
+      {
+        "path": "models/Hitori_Gotoh/reference_audio/人様の前で演奏できるように毎日6時間練習を続けた結果.wav",
+        "size": 1090604,
+        "sha256": "3bf0c2dff48de512957cf8299b9042a8dd359fb5160475e409e0462f38cb3568",
+        "gitSHA1": "bcefc86236477fbd276a3d046531bfffa36da892"
+      }
+    ]
+  },
+  {
+    "id": "btr-ichiji-nijika",
+    "name": "Nijika Ichiji",
+    "summary": "Community character voice by lpkpaco. Japanese reference; the author also lists English and Chinese support.",
+    "repository": "lpkpaco/Bocchi-The-Rock-GPT-SoVITS-Models",
+    "revision": "8f0c784237349e5ad7d468cffd359316a1a9ed5e",
+    "modelVersion": "v2ProPlus",
+    "language": "ja",
+    "transcript": "私、下北沢高校2年、いちちにじか",
+    "reference": "models/Ichiji_Nijika/reference_audio/私、下北沢高校2年、いちちにじか.wav",
+    "gpt": "models/Ichiji_Nijika/v2ProPlus/nijika-v1-1/GPT/nijika-v1-1-e15.ckpt",
+    "sovits": "models/Ichiji_Nijika/v2ProPlus/nijika-v1-1/SoVITS/nijika-v1-1_e12_s744.pth",
+    "license": "CC BY-NC-SA 4.0 (model card). Non-commercial; attribution and share-alike. Review the author’s notices and underlying voice rights.",
+    "files": [
+      {
+        "path": "models/Ichiji_Nijika/v2ProPlus/nijika-v1-1/GPT/nijika-v1-1-e15.ckpt",
+        "size": 155313376,
+        "sha256": "6937593c3dbf4802a63d2871da99cb98946c7ce2ffb12967bd5f21b1026ec2a8",
+        "gitSHA1": "a0140c61cceeaed9595160d2b3b7efffa8578649"
+      },
+      {
+        "path": "models/Ichiji_Nijika/v2ProPlus/nijika-v1-1/SoVITS/nijika-v1-1_e12_s744.pth",
+        "size": 172765363,
+        "sha256": "f37a1b43f4c914faa31fbab6e6c4c06a685df958d4ac8b24ea6ebb0323d3153f",
+        "gitSHA1": "337fa60dc661ba8a443f41b4cb7330f5263f0155"
+      },
+      {
+        "path": "models/Ichiji_Nijika/reference_audio/私、下北沢高校2年、いちちにじか.wav",
+        "size": 725804,
+        "sha256": "36d5f7e6e7e4bef59c8ffcd73d269553ef550e83bafd919f5b2e3eb3b460cfe1",
+        "gitSHA1": "38173314f304a1763dd949a45ed38a5279b8a77d"
+      }
+    ]
+  },
+  {
+    "id": "btr-ikuyo-kita",
+    "name": "Ikuyo Kita",
+    "summary": "Community character voice by lpkpaco. Japanese reference; the author also lists English and Chinese support.",
+    "repository": "lpkpaco/Bocchi-The-Rock-GPT-SoVITS-Models",
+    "revision": "8f0c784237349e5ad7d468cffd359316a1a9ed5e",
+    "modelVersion": "v2ProPlus",
+    "language": "ja",
+    "transcript": "でも私、いくら練習しても本当にギター弾けなかったの",
+    "reference": "models/Ikuyo_Kita/reference_audio/でも私、いくら練習しても本当にギター弾けなかったの.wav",
+    "gpt": "models/Ikuyo_Kita/v2ProPlus/kita-v1-0-1/GPT/kita-v1-0-1-e12.ckpt",
+    "sovits": "models/Ikuyo_Kita/v2ProPlus/kita-v1-0-1/SoVITS/kita-v1-0-1_e8_s192.pth",
+    "license": "CC BY-NC-SA 4.0 (model card). Non-commercial; attribution and share-alike. Review the author’s notices and underlying voice rights.",
+    "files": [
+      {
+        "path": "models/Ikuyo_Kita/v2ProPlus/kita-v1-0-1/GPT/kita-v1-0-1-e12.ckpt",
+        "size": 155313376,
+        "sha256": "6a2ef1271d2eb3cdb73f7a8ad1810d7b4f0d018404af95191d5e52257d2f8e7e",
+        "gitSHA1": "ec423a31ff6aada1cafae47b63d44744464c79e8"
+      },
+      {
+        "path": "models/Ikuyo_Kita/v2ProPlus/kita-v1-0-1/SoVITS/kita-v1-0-1_e8_s192.pth",
+        "size": 172765363,
+        "sha256": "3838ee3023fca9ec2b2b91d2a484b13e4b6d0df82666e66329efdf933495f190",
+        "gitSHA1": "a85de66479c97988b2468ab6acac82e8d00be5d9"
+      },
+      {
+        "path": "models/Ikuyo_Kita/reference_audio/でも私、いくら練習しても本当にギター弾けなかったの.wav",
+        "size": 649004,
+        "sha256": "33fd06d4347dc0e1a15d86c7ae026ed8d40b15798d31b63e1209a4f08ca2c383",
+        "gitSHA1": "627f0ac18e9341224e380ba882050be45362238c"
+      }
+    ]
+  }
+]

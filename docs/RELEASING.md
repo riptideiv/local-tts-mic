@@ -12,6 +12,10 @@ Release checklist for [riptideiv/local-tts-mic](https://github.com/riptideiv/loc
 8. Open the public README logged out: images, relative docs, sample audio and installation steps must resolve. Use `https://github.com/riptideiv/local-tts-mic` in any announcement.
 9. Follow `docs/LAUNCH.md`, rechecking each community’s current rules immediately before posting. Owner review and actual public URLs are required. Remain available for setup failures and substantive questions.
 
+## macOS installer development
+
+See [macOS packaging](MACOS_PACKAGING.md) for the local app-and-driver installer, its first-run model setup, signing inputs, and validation requirements. The current package is a local test artifact and has not been attached to a GitHub release.
+
 ## Before distributing a binary
 
-A portable runtime location and first-run provisioning must replace embedded developer paths. Obtain Developer ID identities; sign all nested code and the privileged installer; notarize/staple the app/package; verify with Gatekeeper on a clean Mac. Include notices for every redistributed component and confirm model/reference redistribution rights. Never label an ad-hoc build “notarized.” Those credentials and clean-machine validation cannot be supplied by a local source patch.
+Packaged builds use a portable bundled Python runtime and per-user first-run provisioning. Obtain Developer ID identities; sign all nested code and the privileged installer; notarize/staple the app/package; verify with Gatekeeper on a clean Mac. Include notices for every redistributed component and confirm model/reference redistribution rights. Never label an ad-hoc build “notarized.” Those credentials and clean-machine validation cannot be supplied by a local source patch.

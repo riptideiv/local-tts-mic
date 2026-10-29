@@ -5,7 +5,7 @@ import runpy
 import signal
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("LOCALSPEAK_ROOT", Path(__file__).resolve().parents[1]))
 os.chdir(ROOT / "runtime/GPT-SoVITS")
 sys.path[:0] = [os.getcwd(), str(Path.cwd() / "GPT_SoVITS")]
 os.environ.update(GRADIO_ANALYTICS_ENABLED="False", is_share="False", is_half="False", CUDA_VISIBLE_DEVICES="")

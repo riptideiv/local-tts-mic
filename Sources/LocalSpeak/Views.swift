@@ -71,6 +71,7 @@ struct MainView: View {
         .alert("Local TTS Mic", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }
+        .sheet(isPresented: $model.showVoiceImporter) { VoiceImportView(model: model, entry: model.catalogueSelection) }
         .sheet(isPresented: $model.showVoiceEditor) { VoiceEditor(model: model, existing: model.editingVoice) }
         .sheet(isPresented: $model.showSetup) { SetupView(model: model) }
     }
@@ -248,13 +249,32 @@ struct OverlayView: View {
 
 struct VoicesView: View {
     @ObservedObject var model: AppModel
+    @State private var section = "Installed"
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Picker("Voice library", selection: $section) {
+                    Text("Installed").tag("Installed")
+                    Text("Catalogue").tag("Catalogue")
+                }.pickerStyle(.segmented).frame(width: 240)
+                Spacer()
+                Button("Add manually") { model.editingVoice = nil; model.showVoiceEditor = true }
+                Button("Import…") { model.catalogueSelection = nil; model.showVoiceImporter = true }.buttonStyle(.borderedProminent)
+            }.padding(.horizontal, 26).padding(.top, 20).padding(.bottom, 8)
+            if section == "Catalogue" { VoiceCatalogueView(model: model) }
+            else { InstalledVoicesView(model: model) }
+        }
+    }
+}
+
+struct InstalledVoicesView: View {
+    @ObservedObject var model: AppModel
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Text("Start with an example, then bring your own voice.").foregroundStyle(.secondary)
-                    Spacer()
-                    Button { model.editingVoice = nil; model.showVoiceEditor = true } label: { Label("Add voice", systemImage: "plus") }.buttonStyle(.borderedProminent)
+                if model.voices.isEmpty {
+                    Text("No voices installed. Run speech setup or import a voice.").foregroundStyle(.secondary)
+                    Button("Speech setup…") { model.showSetup = true }
                 }
                 ForEach(model.voices) { voice in
                     VStack(alignment: .leading, spacing: 12) {
@@ -271,9 +291,7 @@ struct VoicesView: View {
                         HStack {
                             Button("Use voice") { model.selectVoice(voice) }
                             Button("Preview") {
-                                model.selectVoice(voice)
-                                let text = ["en": "Hello! This is my local voice.", "zh": "你好，这是在本地生成的语音。", "ja": "こんにちは。これはローカルで生成した音声です。"]
-                                model.submit(text: text[voice.language] ?? text["en"]!, delivery: .preview)
+                                model.previewVoice(voice)
                             }.disabled(!model.ready)
                             Button(voice.isStarter ? "Duplicate / edit" : "Edit") {
                                 var editable = voice
@@ -284,10 +302,13 @@ struct VoicesView: View {
                             if !voice.isStarter { Button("Delete", role: .destructive) { model.deleteVoice(voice.id) }.buttonStyle(.borderless) }
                         }.controlSize(.small)
                         if let license = voice.license { Text(license).font(.system(size: 10)).foregroundStyle(.secondary).textSelection(.enabled) }
+                        if let source = voice.source, let url = URL(string: source), url.scheme == "https", url.host != nil {
+                            Link("Source and terms", destination: url).font(.caption)
+                        }
                     }.padding(18).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.08)))
                 }
                 Divider().padding(.vertical, 8)
-                Text("Train a custom voice later").font(.headline)
+                Text("Training").font(.headline)
                 Text("Open the local GPT-SoVITS tools to prepare recordings, correct transcripts, and train on CPU. Speech pauses while the tools are running. Import the resulting GPT and SoVITS checkpoints with Add voice.").font(.system(size: 12)).foregroundStyle(.secondary)
                 HStack {
                     if model.trainingRunning {
@@ -296,7 +317,7 @@ struct VoicesView: View {
                     } else {
                         Button("Open training tools") { model.launchTraining() }.disabled(!model.ready)
                     }
-                    Button("Training guide") { NSWorkspace.shared.open(Paths.root.appendingPathComponent("TRAINING.md")) }
+                    Button("Training guide") { NSWorkspace.shared.open(Paths.source.appendingPathComponent("TRAINING.md")) }
                 }
             }.padding(26)
         }
@@ -456,18 +477,20 @@ struct SetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Local speech setup").font(.title2.weight(.semibold))
-            Text("Install the isolated Python runtime, pretrained models, and English and Mandarin reference voices. Allow at least 10 GB free for setup and temporary files. Downloads can take a while; once ready, speech runs offline.").font(.system(size: 13)).foregroundStyle(.secondary)
+            Text(Paths.packaged ? "Download the speech models and English and Mandarin example voices. Allow at least 10 GB free for setup and temporary files. After setup, speech runs offline." : "Install the isolated Python runtime, pretrained models, and English and Mandarin reference voices. Allow at least 10 GB free for setup and temporary files. Downloads can take a while; once ready, speech runs offline.").font(.system(size: 13)).foregroundStyle(.secondary)
             Toggle("Also install the Japanese JSUT reference voice", isOn: $model.includeJSUT).disabled(model.setupRunning)
             Text("JSUT audio permits personal use and non-commercial research. Commercial use requires permission. You can also add your own Japanese recording.").font(.caption).foregroundStyle(.secondary)
             Link("Read JSUT terms", destination: URL(string: "https://sites.google.com/site/shinnosuketakamichi/publication/jsut")!)
             if model.setupRunning { ProgressView().controlSize(.small) }
             ScrollView {
-                Text(model.setupProgress.isEmpty ? "First install Command Line Tools (xcode-select --install), then uv and FFmpeg (brew install uv ffmpeg). Setup downloads from GitHub, Hugging Face, and upstream resource hosts." : model.setupProgress)
+                Text(model.setupProgress.isEmpty ? (Paths.packaged ? "Python and dependencies are included in the app. Click Install / repair to download the speech models and example voices. No Terminal or developer tools are required. Downloads come from Hugging Face, PyPI, and upstream resource hosts." : "First install Command Line Tools (xcode-select --install), then uv and FFmpeg (brew install uv ffmpeg). Setup downloads from GitHub, Hugging Face, and upstream resource hosts.") : model.setupProgress)
                     .font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
             }.padding(12).frame(height: 240).background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
             HStack {
                 Spacer()
-                Button("Close") { dismiss() }.disabled(model.setupRunning)
+                Button(model.setupRunning && Paths.packaged ? "Cancel download" : "Close") {
+                    if model.setupRunning { model.cancelSetup() } else { dismiss() }
+                }.disabled(model.setupRunning && !Paths.packaged)
                 Button("Install / repair") { model.runSetup() }.buttonStyle(.borderedProminent).disabled(model.setupRunning || model.trainingRunning)
             }
         }.padding(26).frame(width: 570).interactiveDismissDisabled(model.setupRunning)
