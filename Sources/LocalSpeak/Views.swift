@@ -21,6 +21,7 @@ struct MainView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 12).padding(.vertical, 11)
                                 .background(model.selectedPage == page.0 ? accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
                                 .foregroundStyle(model.selectedPage == page.0 ? accent : .primary)
+                                .contentShape(Rectangle())
                         }.buttonStyle(.plain)
                     }
                 }
