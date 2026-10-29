@@ -58,7 +58,7 @@ Read the [JSUT terms](https://sites.google.com/site/shinnosuketakamichi/publicat
 
 ### Voice import and catalogue
 
-In **Voices**, use **Import…** for a public Hugging Face URL or downloaded folder, or browse **Catalogue** for pinned community profiles. Imports detect checkpoints and reference metadata, then let you complete missing fields and review the source terms. Checkpoints and references are copied into the app’s library. See [voice import](docs/VOICES.md) for supported formats, storage, and catalogue licensing.
+In **Voices**, use **Import…** for a public Hugging Face URL or downloaded folder, or browse **Catalogue** for pinned community profiles. Imports detect checkpoints and reference metadata, then let you complete missing fields and review the source terms. Checkpoints and references are copied into the app’s library. Imported pairs support **v1, v2, v2Pro, and v2ProPlus**. See [voice import](docs/VOICES.md) for supported formats, v1 setup, storage, and catalogue licensing.
 
 ## Privacy and limitations
 

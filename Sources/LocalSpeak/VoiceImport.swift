@@ -79,7 +79,7 @@ struct VoiceImportSelection {
 }
 
 enum VoiceImportRules {
-    static let versions = ["v2", "v2Pro", "v2ProPlus"]
+    static let versions = ["v1", "v2", "v2Pro", "v2ProPlus"]
     static func relativePath(_ path: String) -> Bool {
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         return !path.isEmpty && path.utf8.count < 2048 && !path.contains("\\") && !path.contains("\0") && parts.allSatisfy { !$0.isEmpty && $0 != "." && $0 != ".." }
@@ -103,7 +103,7 @@ enum VoiceImportRules {
     static func version(in paths: [String]) -> String? {
         let components = paths.flatMap { $0.lowercased().split(separator: "/").map(String.init) }
         // Directory names describe architecture; filenames often contain a creator's unrelated v1/v3 release number.
-        for (key, result) in [("v2proplus", "v2ProPlus"), ("v2pro", "v2Pro"), ("v2", "v2"), ("v4", "unsupported"), ("v3", "unsupported"), ("v1", "unsupported")] {
+        for (key, result) in [("v2proplus", "v2ProPlus"), ("v2pro", "v2Pro"), ("v2", "v2"), ("v4", "unsupported"), ("v3", "unsupported"), ("v1", "v1")] {
             if components.contains(where: { $0 == key || $0 == "gpt_weights_" + key || $0 == "sovits_weights_" + key }) { return result }
         }
         return nil
@@ -130,7 +130,7 @@ enum VoiceImportRules {
     static func sovitsVersion(_ url: URL) throws -> String? {
         let file = try FileHandle(forReadingFrom: url); defer { try? file.close() }
         let header = String(decoding: try file.read(upToCount: 2) ?? Data(), as: UTF8.self)
-        return ["03": "unsupported", "04": "unsupported", "05": "v2Pro", "06": "v2ProPlus", "07": "unsupported", "08": "unsupported"][header]
+        return ["00": "v1", "01": "v2", "02": "unsupported", "03": "unsupported", "04": "unsupported", "05": "v2Pro", "06": "v2ProPlus", "07": "unsupported", "08": "unsupported"][header]
     }
     static func verify(_ url: URL, file: VoiceImportFile) throws {
         let attributes = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey])
@@ -270,7 +270,8 @@ actor VoiceImportService {
         guard VoiceImportRules.versions.contains(selection.modelVersion), ["en", "zh", "ja"].contains(selection.language) else { throw LocalError("Choose a supported model version and reference language.") }
         guard !selection.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, selection.transcript.count <= 4000 else { throw LocalError("Enter the exact words spoken in the reference clip (up to 4,000 characters).") }
         guard selection.gpt.isEmpty == selection.sovits.isEmpty else { throw LocalError("Choose both checkpoints, or use the pretrained model without either checkpoint.") }
-        if VoiceImportRules.version(in: [selection.sovits]) == "unsupported" || (VoiceImportRules.version(in: [selection.sovits]) == nil && VoiceImportRules.version(in: [selection.gpt]) == "unsupported") { throw LocalError("This checkpoint folder is marked v1, v3, or v4. Supported architectures are v2, v2Pro, and v2ProPlus.") }
+        guard selection.modelVersion != "v1" || !selection.gpt.isEmpty else { throw LocalError("v1 voices need a matching GPT and SoVITS checkpoint pair. Use v2ProPlus for the installed pretrained model.") }
+        if VoiceImportRules.version(in: [selection.sovits]) == "unsupported" || (VoiceImportRules.version(in: [selection.sovits]) == nil && VoiceImportRules.version(in: [selection.gpt]) == "unsupported") { throw LocalError("This checkpoint folder is marked v3 or v4. Supported architectures are v1, v2, v2Pro, and v2ProPlus.") }
         let id = UUID().uuidString
         let library = support.appendingPathComponent("voice-library")
         try FileManager.default.createDirectory(at: library, withIntermediateDirectories: true)
@@ -299,7 +300,7 @@ actor VoiceImportService {
             try Task.checkCancellation()
             try VoiceImportRules.verify(destination, file: file)
             if pair.0 == "sovits", let detected = try VoiceImportRules.sovitsVersion(destination) {
-                guard detected != "unsupported" else { throw LocalError("This SoVITS file's architecture header is unsupported. Use a v2, v2Pro, or v2ProPlus model.") }
+                guard detected != "unsupported" else { throw LocalError("This SoVITS file's architecture header is unsupported. Use a v1, v2, v2Pro, or v2ProPlus model.") }
                 guard detected == selection.modelVersion else { throw LocalError("The SoVITS file identifies itself as \(detected). Select that model version and retry.") }
             }
             paths[pair.0] = name

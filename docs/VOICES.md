@@ -39,7 +39,21 @@ A folder or repository may include this optional root-level `local-tts-mic.voice
 }
 ```
 
-Paths are relative to the folder/repository. References must be 3–10 seconds. Supported reference languages are English, Mandarin, and Japanese. Architectures v1, v3, and v4 are unsupported; a creator's unrelated release number in a filename is not treated as the architecture.
+Paths are relative to the folder/repository. References must be 3–10 seconds. Supported reference languages are English, Mandarin, and Japanese. Imported checkpoint pairs support v1, v2, v2Pro, and v2ProPlus. Architectures v3 and v4 are unsupported; a creator's unrelated release number in a filename is not treated as the architecture.
+
+## v1 checkpoints
+
+Choose **v1** in the import sheet or voice editor and supply both the GPT `.ckpt` and SoVITS `.pth` files. The installed pretrained model remains v2ProPlus; v1 needs an imported pair and does not download another base model. English, Mandarin, Japanese, and Auto text use the engine's v1 symbol inventory. Version changes clear cached reference audio features and prompt phonemes before synthesis.
+
+Legacy v1 checkpoints often have a normal ZIP header and unversioned folder names, so the importer cannot safely identify their architecture from filenames alone. Select v1 explicitly. The worker confirms the SoVITS architecture from the loaded checkpoint and reports a version mismatch before inference if the selection is wrong. Numbered `00`/`01` headers identify v1/v2 during import; v3/v4/v5 headers remain unsupported.
+
+For [MomoyamaSawa/GPT-SoVITS_KusanagiNene](https://huggingface.co/MomoyamaSawa/GPT-SoVITS_KusanagiNene), the author's recommended pair is:
+
+- GPT: `GPT_weights/nene30-e15.ckpt`
+- SoVITS: `SoVITS_weights/nene30_e8_s328.pth`
+- Model: **v1**; reference language: **Japanese**.
+
+Use a clear 3–10 second recording of the same voice and its exact transcript. The model repository's README audio files are generated demonstrations, not labelled original reference recordings. The author links a separate [recording dataset and `nene_org.txt` labels](https://huggingface.co/datasets/MomoyamaSawa/Voice-KusanagiNene/tree/main). Choose your permitted recording through **Use my own clip…** and enter its transcript. Review the author's model/dataset terms and underlying voice rights before using it.
 
 ## Storage and cancellation
 
@@ -56,3 +70,11 @@ The native catalogue review and a real Hitori Gotoh download/import were tested 
 The Hitori checkpoint data was loaded through PyTorch’s restricted weights-only loader (using a data-only stand-in for its HParams record), converted to plain tensor/config data, and tested through the actual CPU worker. Japanese synthesis produced 2.62 seconds of finite, non-silent audio, with first audio at 2.75 seconds in that run. This validates that pair’s data with the current engine; it is not a quality or speed guarantee for every language or catalogue entry.
 
 The native test suite covers folder/path safety, transcript matching, immutable Hub inspection, URL escaping, hashes, short references, incomplete pairs, architecture headers, cancellation cleanup, reusable manifests, and private previews preserving the broadcast selection. No community voice files were committed or uploaded.
+
+### v1 validation
+
+The Nene pair above was downloaded from model revision `4dd5b92a0c2f2a8290eaa8c3301e88db2f86fc3b` and verified against the Hub's SHA-256 hashes. A restricted weights-only reload with a data-only HParams stand-in confirmed the SoVITS text embedding has 322 symbols (v1). No original checkpoint pickle code was executed during this test.
+
+The reference was `nene/area1_043_001.mp3` from dataset revision `8c2236bde08008b9290f4ea9b543a8028845c1f7`, converted to a 6.01-second mono WAV and paired with its original label. The real CPU worker produced 4.18 seconds of finite, non-silent Japanese speech, with first audio at 2.57 seconds in that run. Switching v1 → v2ProPlus → v1 with the same reference/transcript succeeded; an incorrectly labelled pair was rejected and a subsequent v1 request recovered. These are single-machine checks, not guarantees for every v1 model or MPS.
+
+The native app also imported a folder containing this restricted checkpoint data and completed a private Japanese preview with first audio at 2.4 seconds, while preserving the selected broadcast voice. Model-free regression tests cover v1 protocol validation, required checkpoint pairs, local-folder import, version headers, reference-cache invalidation across versions, and failed-load recovery. No Nene checkpoints, recordings, or generated samples are bundled or committed.
