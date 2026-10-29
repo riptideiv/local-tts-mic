@@ -295,7 +295,7 @@ struct VoicesView: View {
                     } else {
                         Button("Open training tools") { model.launchTraining() }.disabled(!model.ready)
                     }
-                    Button("Training guide") { NSWorkspace.shared.open(Paths.root.appendingPathComponent("TRAINING.md")) }
+                    Button("Training guide") { NSWorkspace.shared.open(Paths.source.appendingPathComponent("TRAINING.md")) }
                 }
             }.padding(26)
         }
@@ -455,18 +455,20 @@ struct SetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Local speech setup").font(.title2.weight(.semibold))
-            Text("Install the isolated Python runtime, pretrained models, and English and Mandarin reference voices. Allow at least 10 GB free for setup and temporary files. Downloads can take a while; once ready, speech runs offline.").font(.system(size: 13)).foregroundStyle(.secondary)
+            Text(Paths.packaged ? "Download the speech models and English and Mandarin example voices. Allow at least 10 GB free for setup and temporary files. After setup, speech runs offline." : "Install the isolated Python runtime, pretrained models, and English and Mandarin reference voices. Allow at least 10 GB free for setup and temporary files. Downloads can take a while; once ready, speech runs offline.").font(.system(size: 13)).foregroundStyle(.secondary)
             Toggle("Also install the Japanese JSUT reference voice", isOn: $model.includeJSUT).disabled(model.setupRunning)
             Text("JSUT audio permits personal use and non-commercial research. Commercial use requires permission. You can also add your own Japanese recording.").font(.caption).foregroundStyle(.secondary)
             Link("Read JSUT terms", destination: URL(string: "https://sites.google.com/site/shinnosuketakamichi/publication/jsut")!)
             if model.setupRunning { ProgressView().controlSize(.small) }
             ScrollView {
-                Text(model.setupProgress.isEmpty ? "First install Command Line Tools (xcode-select --install), then uv and FFmpeg (brew install uv ffmpeg). Setup downloads from GitHub, Hugging Face, and upstream resource hosts." : model.setupProgress)
+                Text(model.setupProgress.isEmpty ? (Paths.packaged ? "Python and dependencies are included in the app. Click Install / repair to download the speech models and example voices. No Terminal or developer tools are required. Downloads come from Hugging Face, PyPI, and upstream resource hosts." : "First install Command Line Tools (xcode-select --install), then uv and FFmpeg (brew install uv ffmpeg). Setup downloads from GitHub, Hugging Face, and upstream resource hosts.") : model.setupProgress)
                     .font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
             }.padding(12).frame(height: 240).background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8))
             HStack {
                 Spacer()
-                Button("Close") { dismiss() }.disabled(model.setupRunning)
+                Button(model.setupRunning && Paths.packaged ? "Cancel download" : "Close") {
+                    if model.setupRunning { model.cancelSetup() } else { dismiss() }
+                }.disabled(model.setupRunning && !Paths.packaged)
                 Button("Install / repair") { model.runSetup() }.buttonStyle(.borderedProminent).disabled(model.setupRunning || model.trainingRunning)
             }
         }.padding(26).frame(width: 570).interactiveDismissDisabled(model.setupRunning)

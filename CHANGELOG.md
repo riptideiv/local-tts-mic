@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Local app-and-driver `.pkg` builder with a standalone Python runtime and first-run model downloads. Packaged users do not need Terminal, Git, Homebrew, or developer tools.
+- Per-user model storage, portable app paths, cancellable setup with retry, and signing/notarization support. Installer remains a local test artifact pending signing and clean-Mac validation.
+
+
 ## 1.1.0 — public source preview
 
 - Native typing overlay, saved phrases, queue, WAV export, English/Mandarin/Japanese reference-conditioned speech through local GPT-SoVITS.

@@ -36,6 +36,7 @@ import CoreAudio
     private var cancelled: Set<String> = []
     private var training: Process?
     private var setupProcess: Process?
+    private var setupCancelled = false
     private var deviceAddress = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDevices, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
     private var deviceListener: AudioObjectPropertyListenerBlock?
     var showOverlay: (() -> Void)?
@@ -69,14 +70,17 @@ import CoreAudio
         // User files and logs never enter source control.
         if persistChanges { try? FileManager.default.createDirectory(at: Paths.support, withIntermediateDirectories: true) }
         if startAutomatically, runtimeInstalled { startEngine() }
-        else if startAutomatically { engineStatus = "Setup needed · install the local speech runtime" }
+        else if startAutomatically {
+            engineStatus = "Setup needed · install the local speech runtime"
+            if Paths.packaged { showSetup = true }
+        }
     }
 
     var microphoneInstalled: Bool { devices.contains { $0.uid == AudioDevices.localMicUID && $0.outputs > 0 } }
-    var runtimeInstalled: Bool { FileManager.default.isExecutableFile(atPath: Paths.runtime.appendingPathComponent(".venv/bin/python").path) }
+    var runtimeInstalled: Bool { Paths.runtimeReady }
 
     func openDriverInstaller() {
-        let installer = Paths.root.appendingPathComponent("build/Local TTS Mic Driver.pkg")
+        let installer = Paths.packaged ? Paths.source.appendingPathComponent("Local TTS Mic Driver.pkg") : Paths.root.appendingPathComponent("build/Local TTS Mic Driver.pkg")
         guard FileManager.default.fileExists(atPath: installer.path) else {
             error = "Build the microphone installer first with ./scripts/build-driver.sh from the project folder."
             return
@@ -358,11 +362,13 @@ import CoreAudio
     func launchTraining() {
         stopAll(); worker.stop(); currentID = nil; ready = false
         let p = Process()
-        p.executableURL = Paths.runtime.appendingPathComponent(".venv/bin/python")
-        p.arguments = [Paths.root.appendingPathComponent("engine/training.py").path, "en_US"]
+        p.executableURL = Paths.python
+        p.arguments = [Paths.source.appendingPathComponent("engine/training.py").path, "en_US"]
         p.currentDirectoryURL = Paths.runtime.appendingPathComponent("GPT-SoVITS")
         var env = ProcessInfo.processInfo.environment
-        env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["PATH"] = Paths.searchPath
+        env["LOCALSPEAK_ROOT"] = Paths.root.path
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
         env["CUDA_VISIBLE_DEVICES"] = ""
         env["is_half"] = "False"
         env["GRADIO_SERVER_NAME"] = "127.0.0.1"
@@ -402,11 +408,24 @@ import CoreAudio
     func runSetup() {
         guard !setupRunning, !trainingRunning else { return }
         stopAll(); worker.stop(); currentID = nil; ready = false
-        setupRunning = true; setupProgress = "Preparing local runtime…\n"
+        setupRunning = true; setupCancelled = false; setupProgress = "Preparing local runtime…\n"
         let p = Process(), pipe = Pipe()
-        p.executableURL = URL(fileURLWithPath: "/bin/bash")
-        p.arguments = [Paths.root.appendingPathComponent("scripts/setup.sh").path] + (includeJSUT ? ["--include-jsut"] : [])
+        if Paths.packaged {
+            p.executableURL = Paths.python
+            p.arguments = ["-u", Paths.source.appendingPathComponent("scripts/setup_packaged.py").path, "--root", Paths.root.path]
+        } else {
+            p.executableURL = URL(fileURLWithPath: "/bin/bash")
+            p.arguments = [Paths.source.appendingPathComponent("scripts/setup.sh").path]
+        }
+        if includeJSUT { p.arguments?.append("--include-jsut") }
+        do { try FileManager.default.createDirectory(at: Paths.root, withIntermediateDirectories: true) }
+        catch { setupRunning = false; self.error = error.localizedDescription; return }
         p.currentDirectoryURL = Paths.root
+        var env = ProcessInfo.processInfo.environment
+        env["PATH"] = Paths.searchPath
+        env["LOCALSPEAK_ROOT"] = Paths.root.path
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        p.environment = env
         p.standardOutput = pipe; p.standardError = pipe
         pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
@@ -422,10 +441,22 @@ import CoreAudio
                 self.voices = starters + self.voices.filter { !$0.isStarter }
                 if self.selectedVoice == nil, let first = self.voices.first { self.selectVoice(first) }
                 self.showSetup = false; self.startEngine()
-            } else { self.engineStatus = "Setup failed"; self.error = "Setup failed. See the setup output for the download or installation error." }
+            } else {
+                self.engineStatus = self.setupCancelled ? "Setup stopped" : "Setup failed"
+                self.setupProgress += self.setupCancelled
+                    ? "\nDownload stopped. Click Install / repair to continue. Completed downloads are retained.\n"
+                    : "\nSetup failed. Check your internet connection and available disk space, then click Install / repair to retry. Completed downloads are retained.\n"
+            }
         } }
         do { try p.run(); setupProcess = p }
         catch { setupRunning = false; self.error = error.localizedDescription }
+    }
+
+    func cancelSetup() {
+        guard Paths.packaged, setupRunning else { return }
+        setupCancelled = true
+        setupProgress += "\nStopping download…\n"
+        setupProcess?.terminate()
     }
 
     func shutdown() {
