@@ -46,6 +46,7 @@ struct VoiceProfile: Codable, Identifiable, Equatable {
     var license: String?
     var gptPath: String?
     var sovitsPath: String?
+    var catalogueID: String?
 
     var languageName: String { languageLabel(language) }
     var isStarter: Bool { id.hasPrefix("starter-") }

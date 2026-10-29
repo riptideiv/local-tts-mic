@@ -126,6 +126,20 @@ final class PlaybackTests: XCTestCase {
         XCTAssertEqual(audio.monitoringFlags, [false])
     }
 
+    @MainActor func testVoicePreviewKeepsTheChosenBroadcastVoice() {
+        let worker = FakeWorker(), audio = FakeAudio()
+        let model = makeModel(worker, audio)
+        let previous = model.settings
+        let voice = VoiceProfile(id: "other", name: "Other", referencePath: "/tmp/other.wav", transcript: "Reference", language: "ja")
+        model.voices.append(voice)
+        model.previewVoice(voice)
+        XCTAssertEqual(model.settings.selectedVoice, previous.selectedVoice)
+        XCTAssertEqual(model.settings.language, previous.language)
+        XCTAssertEqual(model.jobs.last?.voice.id, "other")
+        XCTAssertEqual(model.jobs.last?.language, "ja")
+        XCTAssertEqual(model.jobs.last?.delivery, .preview)
+    }
+
     @MainActor private func makeModel(_ worker: FakeWorker, _ audio: FakeAudio, grace: Double = 3, playbackGrace: Double = 8, synthesisGrace: Double = 90) -> AppModel {
         let model = AppModel(worker: worker, audio: audio, startAutomatically: false, cancellationGrace: grace, playbackGrace: playbackGrace, synthesisGrace: synthesisGrace, persistChanges: false)
         // Queue/routing tests use a fake worker and need no installed voices,

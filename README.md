@@ -56,6 +56,10 @@ The JSUT reference has personal/non-commercial research restrictions and is **op
 
 Read the [JSUT terms](https://sites.google.com/site/shinnosuketakamichi/publication/jsut) first. Japanese synthesis can also use your own permitted reference recording. In **Voices → Add voice**, choose a 3–10 second clip, its exact transcript, and reference language. Only import trusted `.ckpt` / `.pth` checkpoint pairs: model loading can execute Python code. Use recordings and voices you have permission to use. See [training](TRAINING.md) and [third-party notices](THIRD_PARTY.md).
 
+### Voice import and catalogue
+
+In **Voices**, use **Import…** for a public Hugging Face URL or downloaded folder, or browse **Catalogue** for pinned community profiles. Imports detect checkpoints and reference metadata, then let you complete missing fields and review the source terms. Checkpoints and references are copied into the app’s library. See [voice import](docs/VOICES.md) for supported formats, storage, and catalogue licensing.
+
 ## Privacy and limitations
 
 - Inference runs in a managed Python process over local pipes. Setup and repair contact GitHub, Hugging Face, and upstream resource hosts. Training tools may download additional models.

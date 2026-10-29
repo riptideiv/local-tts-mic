@@ -17,6 +17,8 @@ import CoreAudio
     @Published var error: String?
     @Published var hotkeyError: String?
     @Published var selectedPage = "Speak"
+    @Published var showVoiceImporter = false
+    @Published var catalogueSelection: VoiceCatalogueEntry?
     @Published var showVoiceEditor = false
     @Published var editingVoice: VoiceProfile?
     @Published var trainingRunning = false
@@ -296,6 +298,20 @@ import CoreAudio
 
     func selectVoice(_ voice: VoiceProfile) {
         settings.selectedVoice = voice.id; settings.language = voice.language; settings.speed = voice.speed
+    }
+
+    func saveImportedVoice(_ voice: VoiceProfile) throws {
+        let previous = settings
+        defer { settings = previous }
+        try saveVoice(voice)
+    }
+
+    func previewVoice(_ voice: VoiceProfile) {
+        let previous = settings
+        defer { settings = previous }
+        selectVoice(voice)
+        let sample = ["en": "Hello! This is my local voice.", "zh": "你好，这是在本地生成的语音。", "ja": "こんにちは。これはローカルで生成した音声です。"]
+        submit(text: sample[voice.language] ?? sample["en"]!, delivery: .preview)
     }
 
     func saveVoice(_ voice: VoiceProfile) throws {

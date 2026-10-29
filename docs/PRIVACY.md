@@ -17,3 +17,7 @@ Normal operation does not record the physical microphone. Explicit loopback/queu
 Model checkpoints are trusted executable inputs, not inert audio files. Do not import untrusted weights. Use reference recordings you have permission to use and avoid presenting generated voices as a real speaker’s unaltered recording.
 
 Before sharing bug reports, remove transcripts, personal filenames, device UIDs, and reference/checkpoint paths. Do not upload the runtime folder, Application Support, checkpoints, or voice recordings to a public issue.
+
+## Voice discovery and imports
+
+Inspecting a Hugging Face URL fetches public repository metadata and model-card/transcript files. Download and import fetches only the selected voice files from a pinned revision; requests may be redirected to Hugging Face’s file hosts. The app does not send speech text, local references, saved profiles, or account tokens to the Hub. Catalogue and forum links open externally when clicked. Local-folder inspection stays local. Imported checkpoints, copied references, model cards, and provenance stay under Application Support until removed; see [voice import](VOICES.md).

@@ -70,6 +70,7 @@ struct MainView: View {
         .alert("Local TTS Mic", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }
+        .sheet(isPresented: $model.showVoiceImporter) { VoiceImportView(model: model, entry: model.catalogueSelection) }
         .sheet(isPresented: $model.showVoiceEditor) { VoiceEditor(model: model, existing: model.editingVoice) }
         .sheet(isPresented: $model.showSetup) { SetupView(model: model) }
     }
@@ -247,13 +248,32 @@ struct OverlayView: View {
 
 struct VoicesView: View {
     @ObservedObject var model: AppModel
+    @State private var section = "Installed"
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Picker("Voice library", selection: $section) {
+                    Text("Installed").tag("Installed")
+                    Text("Catalogue").tag("Catalogue")
+                }.pickerStyle(.segmented).frame(width: 240)
+                Spacer()
+                Button("Add manually") { model.editingVoice = nil; model.showVoiceEditor = true }
+                Button("Import…") { model.catalogueSelection = nil; model.showVoiceImporter = true }.buttonStyle(.borderedProminent)
+            }.padding(.horizontal, 26).padding(.top, 20).padding(.bottom, 8)
+            if section == "Catalogue" { VoiceCatalogueView(model: model) }
+            else { InstalledVoicesView(model: model) }
+        }
+    }
+}
+
+struct InstalledVoicesView: View {
+    @ObservedObject var model: AppModel
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Text("Start with an example, then bring your own voice.").foregroundStyle(.secondary)
-                    Spacer()
-                    Button { model.editingVoice = nil; model.showVoiceEditor = true } label: { Label("Add voice", systemImage: "plus") }.buttonStyle(.borderedProminent)
+                if model.voices.isEmpty {
+                    Text("No voices installed. Run speech setup or import a voice.").foregroundStyle(.secondary)
+                    Button("Speech setup…") { model.showSetup = true }
                 }
                 ForEach(model.voices) { voice in
                     VStack(alignment: .leading, spacing: 12) {
@@ -270,9 +290,7 @@ struct VoicesView: View {
                         HStack {
                             Button("Use voice") { model.selectVoice(voice) }
                             Button("Preview") {
-                                model.selectVoice(voice)
-                                let text = ["en": "Hello! This is my local voice.", "zh": "你好，这是在本地生成的语音。", "ja": "こんにちは。これはローカルで生成した音声です。"]
-                                model.submit(text: text[voice.language] ?? text["en"]!, delivery: .preview)
+                                model.previewVoice(voice)
                             }.disabled(!model.ready)
                             Button(voice.isStarter ? "Duplicate / edit" : "Edit") {
                                 var editable = voice
@@ -283,10 +301,13 @@ struct VoicesView: View {
                             if !voice.isStarter { Button("Delete", role: .destructive) { model.deleteVoice(voice.id) }.buttonStyle(.borderless) }
                         }.controlSize(.small)
                         if let license = voice.license { Text(license).font(.system(size: 10)).foregroundStyle(.secondary).textSelection(.enabled) }
+                        if let source = voice.source, let url = URL(string: source), url.scheme == "https", url.host != nil {
+                            Link("Source and terms", destination: url).font(.caption)
+                        }
                     }.padding(18).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.primary.opacity(0.08)))
                 }
                 Divider().padding(.vertical, 8)
-                Text("Train a custom voice later").font(.headline)
+                Text("Training").font(.headline)
                 Text("Open the local GPT-SoVITS tools to prepare recordings, correct transcripts, and train on CPU. Speech pauses while the tools are running. Import the resulting GPT and SoVITS checkpoints with Add voice.").font(.system(size: 12)).foregroundStyle(.secondary)
                 HStack {
                     if model.trainingRunning {

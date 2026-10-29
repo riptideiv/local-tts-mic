@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Hugging Face URL and local-folder voice import, with metadata/transcript discovery, pinned downloads, file verification, and copied checkpoints.
+- Small community voice catalogue; private voice previews preserve the selected broadcast voice.
+
 - Local app-and-driver `.pkg` builder with a standalone Python runtime and first-run model downloads. Packaged users do not need Terminal, Git, Homebrew, or developer tools.
 - Per-user model storage, portable app paths, cancellable setup with retry, and signing/notarization support. Installer remains a local test artifact pending signing and clean-Mac validation.
 
