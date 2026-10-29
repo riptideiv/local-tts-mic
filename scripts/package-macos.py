@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -18,6 +19,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 BUILD = ROOT / 'build/distribution'
 CACHE = ROOT / 'build/package-cache'
+MIN_MACOS = json.loads((ROOT / 'resources/runtime-distribution.json').read_text())['macos']
 
 
 def run(*args, **kwargs):
@@ -109,6 +111,14 @@ def verify_relocation(app):
         if path.is_symlink() and not path.resolve().is_relative_to(app.resolve()):
             raise RuntimeError(f'Non-portable symlink: {path}')
     for path in macho_files(app):
+        metadata = subprocess.check_output(['otool', '-l', str(path)], text=True)
+        versions = re.findall(r'\bminos (\d+(?:\.\d+)*)', metadata)
+        versions += re.findall(r'cmd LC_VERSION_MIN_MACOSX\s+cmdsize \d+\s+version (\d+(?:\.\d+)*)', metadata)
+        for version in versions:
+            parts = tuple(map(int, version.split('.')))
+            required = tuple(map(int, MIN_MACOS.split('.')))
+            if parts + (0,) * (3 - len(parts)) > required + (0,) * (3 - len(required)):
+                raise RuntimeError(f'{path} requires macOS {version}, newer than packaged minimum {MIN_MACOS}')
         output = subprocess.check_output(['otool', '-L', str(path)], text=True)
         for line in output.splitlines()[1:]:
             if not line.startswith('\t'): continue
@@ -153,6 +163,29 @@ def component(root, output, identifier, version, scripts=None):
     run(*args, output)
 
 
+def make_distribution(version):
+    distribution = ET.Element('installer-gui-script', {'minSpecVersion': '2'})
+    ET.SubElement(distribution, 'title').text = 'Local TTS Mic'
+    ET.SubElement(distribution, 'welcome', {'file': 'welcome.html', 'mime-type': 'text/html'})
+    ET.SubElement(distribution, 'conclusion', {'file': 'conclusion.html', 'mime-type': 'text/html'})
+    ET.SubElement(distribution, 'options', {'customize': 'never', 'hostArchitectures': 'arm64', 'require-scripts': 'false'})
+    volume = ET.SubElement(distribution, 'volume-check', {'script': 'true'})
+    ET.SubElement(ET.SubElement(volume, 'allowed-os-versions'), 'os-version', {'min': MIN_MACOS})
+    ET.SubElement(distribution, 'domains', {'enable_localSystem': 'true', 'enable_currentUserHome': 'false', 'enable_anywhere': 'false'})
+    outline = ET.SubElement(distribution, 'choices-outline')
+    for name, title in [('app', 'Local TTS Mic'), ('driver', 'Virtual microphone')]:
+        ET.SubElement(outline, 'line', {'choice': name})
+        choice = ET.SubElement(distribution, 'choice', {'id': name, 'title': title, 'visible': 'false'})
+        ET.SubElement(choice, 'pkg-ref', {'id': 'local.localspeak.' + name + '.installer'})
+        ET.SubElement(distribution, 'pkg-ref', {'id': 'local.localspeak.' + name + '.installer', 'version': version}).text = name + '.pkg'
+    # Driver component uses the existing installer receipt identifier.
+    for ref in distribution.iter('pkg-ref'):
+        if ref.get('id') == 'local.localspeak.driver.installer': ref.set('id', 'local.localspeak.mic.installer')
+    close = ET.SubElement(distribution, 'pkg-ref', {'id': 'local.localspeak.app.installer'})
+    ET.SubElement(ET.SubElement(close, 'must-close'), 'app', {'id': 'local.localspeak.app'})
+    return distribution
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--sign', action='store_true', help='Require DEVELOPER_ID_APPLICATION and DEVELOPER_ID_INSTALLER environment variables')
@@ -193,6 +226,7 @@ def main():
     info = plistlib.loads(info_path.read_bytes())
     info.pop('LocalSpeakRoot', None)
     info['LocalSpeakPackaged'] = True
+    info['LSMinimumSystemVersion'] = MIN_MACOS
     info_path.write_bytes(plistlib.dumps(info))
     driver = BUILD / 'driver-root/Library/Audio/Plug-Ins/HAL/LocalSpeakMic.driver'
     run('ditto', ROOT / 'build/LocalSpeakMic.driver', driver)
@@ -218,22 +252,7 @@ def main():
     run('codesign', '--verify', '--deep', '--strict', app)
     app_pkg = BUILD / 'app.pkg'
     component(BUILD / 'app-root', app_pkg, 'local.localspeak.app.installer', version)
-    distribution = ET.Element('installer-gui-script', {'minSpecVersion': '2'})
-    ET.SubElement(distribution, 'title').text = 'Local TTS Mic'
-    ET.SubElement(distribution, 'welcome', {'file': 'welcome.html'})
-    ET.SubElement(distribution, 'conclusion', {'file': 'conclusion.html'})
-    ET.SubElement(distribution, 'options', {'customize': 'never', 'hostArchitectures': 'arm64', 'require-scripts': 'false'})
-    ET.SubElement(ET.SubElement(distribution, 'allowed-os-versions'), 'os-version', {'min': '14.0'})
-    ET.SubElement(distribution, 'domains', {'enable_localSystem': 'true', 'enable_currentUserHome': 'false', 'enable_anywhere': 'false'})
-    outline = ET.SubElement(distribution, 'choices-outline')
-    for name, title in [('app', 'Local TTS Mic'), ('driver', 'Virtual microphone')]:
-        ET.SubElement(outline, 'line', {'choice': name})
-        choice = ET.SubElement(distribution, 'choice', {'id': name, 'title': title, 'visible': 'false'})
-        ET.SubElement(choice, 'pkg-ref', {'id': 'local.localspeak.' + name + '.installer'})
-        ET.SubElement(distribution, 'pkg-ref', {'id': 'local.localspeak.' + name + '.installer', 'version': version}).text = name + '.pkg'
-    # Driver component uses the existing installer receipt identifier.
-    for ref in distribution.iter('pkg-ref'):
-        if ref.get('id') == 'local.localspeak.driver.installer': ref.set('id', 'local.localspeak.mic.installer')
+    distribution = make_distribution(version)
     distribution_path = BUILD / 'Distribution.xml'
     ET.ElementTree(distribution).write(distribution_path, encoding='utf-8', xml_declaration=True)
     suffix = '' if args.sign else '-unsigned'

@@ -122,3 +122,18 @@ def test_setup_completion_marker_requires_all_downloads(tmp_path, monkeypatch):
     assert json.loads((root / 'runtime/setup-complete.json').read_text()) == {'runtimeID': 'expected'}
     assert (root / 'runtime/completed-download').read_text() == 'retained'
     assert not (source / 'runtime').exists()
+
+
+def test_installer_enforces_os_volume_check_and_closes_running_app():
+    spec = importlib.util.spec_from_file_location('package_macos', Path(__file__).resolve().parents[1] / 'scripts/package-macos.py')
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    distribution = builder.make_distribution('1.1.0')
+    # OS ranges at the root are ignored by Installer; they belong in volume-check.
+    assert distribution.find('allowed-os-versions') is None
+    assert distribution.find('volume-check/allowed-os-versions/os-version').get('min') == '15.0'
+    assert distribution.find('options').get('hostArchitectures') == 'arm64'
+    close = distribution.find("pkg-ref/must-close/app")
+    assert close.get('id') == 'local.localspeak.app'
+    packages = {ref.get('id'): ref.text for ref in distribution.findall('pkg-ref') if ref.text}
+    assert packages == {'local.localspeak.app.installer': 'app.pkg', 'local.localspeak.mic.installer': 'driver.pkg'}

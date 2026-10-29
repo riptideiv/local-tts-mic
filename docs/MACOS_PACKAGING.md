@@ -9,6 +9,8 @@ The installer is under development and is currently a local test artifact. No `.
 3. Open Local TTS Mic from Applications. Its setup window downloads the speech models, FFmpeg, and example voices. Allow at least 10 GB free and several GB of internet downloads.
 4. After setup, try Preview, then select Local TTS Mic as the input in the receiving call/game app.
 
+The packaged build requires **Apple Silicon and macOS 15 or newer**. The pinned orjson dependency contains a macOS 15 native extension; the builder audits every native deployment target and enforces the packaged minimum in both the app and Installer. Source code still targets macOS 14, whose dependency compatibility remains unverified.
+
 Recipients do not need Terminal, Git, Homebrew, Python, or Command Line Tools. The app includes a standalone Python interpreter, pinned Python dependencies, Open JTalk dictionary, and pinned GPT-SoVITS source. The models and FFmpeg download on first launch, with checksums where provided by the source or the pinned download manifest. The restricted JSUT example remains optional.
 
 ## Storage and updates
@@ -59,9 +61,9 @@ The current work does not upload this package or create a GitHub release.
 
 ## Local validation
 
-- 26 Python tests passed, including unsafe archives, exclusive setup locking, retained model weights, FFmpeg integrity/repair, and interrupted setup completion markers.
+- 27 Python tests passed, including unsafe archives, exclusive setup locking, retained model weights, FFmpeg integrity/repair, and interrupted setup completion markers.
 - 12 Swift tests passed. The existing driver harness and address/undefined/thread sanitizer checks passed after the portable path changes.
-- The portable app's native libraries and symlinks passed checks for dependencies outside the bundle. Installer accepted the combined package's distribution and both selected components without installing them.
+- The portable app's native libraries, deployment targets, and symlinks passed checks for dependencies outside the bundle. Installer accepted the combined package's distribution and both selected components without installing them.
 - A relocated, read-only app completed packaged setup and a real CPU private Preview. First audio in that run was 5.5 seconds. Its bundle seal remained valid after setup and speech generation.
 - The native first-run setup sheet was reviewed. Starting setup showed its download phases; Cancel download stopped it, retained completed files, left no completion marker, and enabled retry.
 - The setup test used APFS clones of previously verified public model, reference, and language-data caches, plus a fresh pinned FFmpeg download. This does not establish fresh-download performance or behavior on a second Mac.
