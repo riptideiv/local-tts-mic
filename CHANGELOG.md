@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- GPT-SoVITS v1 checkpoint import and synthesis, with v1/v2 architecture headers, version mismatch errors, and reference-cache invalidation when changing models.
+
 - Hugging Face URL and local-folder voice import, with metadata/transcript discovery, pinned downloads, file verification, and copied checkpoints.
 - Small community voice catalogue; private voice previews preserve the selected broadcast voice.
 

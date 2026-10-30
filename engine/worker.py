@@ -85,6 +85,29 @@ class Worker:
         with self.cancel_lock:
             return job_id in self.cancelled
 
+    def select_weights(self, voice):
+        defaults = self.TTS_Config.default_configs[voice["modelVersion"]]
+        pair = (voice.get("gptPath") or defaults["t2s_weights_path"],
+                voice.get("sovitsPath") or defaults["vits_weights_path"])
+        if pair != self.loaded_pair:
+            self.loaded_pair = None  # A failed partial load must never be reused.
+            # Semantic tokens, reference spectra, and phoneme IDs depend on the
+            # weights and symbol inventory, even when the reference path is unchanged.
+            self.pipeline.prompt_cache = {
+                "ref_audio_path": None, "prompt_semantic": None, "refer_spec": [],
+                "prompt_text": None, "prompt_lang": None, "phones": None,
+                "bert_features": None, "norm_text": None, "aux_ref_audio_paths": [],
+            }
+            # SoVITS establishes the actual architecture and language inventory.
+            self.pipeline.init_vits_weights(pair[1])
+            actual = self.pipeline.configs.version
+            if actual != voice["modelVersion"]:
+                raise ValueError(f"Checkpoint version is {actual}; set this voice's model version accordingly.")
+            self.pipeline.init_t2s_weights(pair[0])
+            self.loaded_pair = pair
+        elif self.pipeline.configs.version != voice["modelVersion"]:
+            raise ValueError(f"Checkpoint version is {self.pipeline.configs.version}; set this voice's model version accordingly.")
+
     def synthesize(self, command):
         import numpy as np
         import soundfile as sf
@@ -97,18 +120,7 @@ class Worker:
         info = sf.info(voice["referencePath"])
         if not 3 <= info.duration <= 10:
             raise ValueError("Use a clear reference clip between 3 and 10 seconds.")
-        defaults = self.TTS_Config.default_configs[voice["modelVersion"]]
-        pair = (voice.get("gptPath") or defaults["t2s_weights_path"],
-                voice.get("sovitsPath") or defaults["vits_weights_path"])
-        if pair != self.loaded_pair:
-            self.loaded_pair = None  # A failed partial load must never be reused.
-            self.pipeline.init_t2s_weights(pair[0])
-            self.pipeline.init_vits_weights(pair[1])
-            self.loaded_pair = pair
-        # Match the selected version, including the checkpoint's architecture.
-        actual = self.pipeline.configs.version
-        if actual != voice["modelVersion"]:
-            raise ValueError(f"Checkpoint version is {actual}; set this voice's model version accordingly.")
+        self.select_weights(voice)
         inputs = dict(text=text, text_lang=command["language"], ref_audio_path=voice["referencePath"],
                       prompt_text=voice["transcript"], prompt_lang=voice["language"],
                       speed_factor=speed, text_split_method="cut5", batch_size=1, split_bucket=False,

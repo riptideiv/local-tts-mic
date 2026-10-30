@@ -18,6 +18,7 @@ final class VoiceImportTests: XCTestCase {
         XCTAssertEqual(VoiceImportRules.version(in: ["models/v2ProPlus/gotoh-v1-3.ckpt"]), "v2ProPlus")
         XCTAssertEqual(VoiceImportRules.version(in: ["SoVITS_weights_v2/model.pth"]), "v2")
         XCTAssertEqual(VoiceImportRules.version(in: ["models/v4/model.pth"]), "unsupported")
+        XCTAssertEqual(VoiceImportRules.version(in: ["SoVITS_weights_v1/model.pth"]), "v1")
         XCTAssertNil(VoiceImportRules.version(in: ["model-v1-3.ckpt"]))
     }
     func testListTranscriptWindowsPathsAndAmbiguousBasenames() {
@@ -172,11 +173,41 @@ extension VoiceImportTests {
 extension VoiceImportTests {
     func testSoVITSArchitectureHeadersCannotBeOverriddenByDirectoryNames() throws {
         let file = try temporary().appendingPathComponent("model.pth")
+        try Data("00fake".utf8).write(to: file)
+        XCTAssertEqual(try VoiceImportRules.sovitsVersion(file), "v1")
+        try Data("01fake".utf8).write(to: file)
+        XCTAssertEqual(try VoiceImportRules.sovitsVersion(file), "v2")
+        try Data("02fake".utf8).write(to: file)
+        XCTAssertEqual(try VoiceImportRules.sovitsVersion(file), "unsupported")
         try Data("04fake".utf8).write(to: file)
         XCTAssertEqual(try VoiceImportRules.sovitsVersion(file), "unsupported")
         try Data("06fake".utf8).write(to: file)
         XCTAssertEqual(try VoiceImportRules.sovitsVersion(file), "v2ProPlus")
         try Data("PKfake".utf8).write(to: file)
         XCTAssertNil(try VoiceImportRules.sovitsVersion(file))
+    }
+}
+
+
+extension VoiceImportTests {
+    func testV1FolderImportsWithPairAndRejectsMissingPairOrWrongHeader() async throws {
+        let folder = try temporary(), support = folder.appendingPathComponent("support")
+        try writeAudio(folder.appendingPathComponent("ref.wav"))
+        try Data("checkpoint test fixture".utf8).write(to: folder.appendingPathComponent("nene30-e15.ckpt"))
+        // Legacy v1 checkpoints use a normal ZIP header; architecture is confirmed by the worker.
+        try Data("PKfixture".utf8).write(to: folder.appendingPathComponent("nene30_e8_s328.pth"))
+        let service = VoiceImportService(), inspection = try await service.inspect(folder: folder)
+        var selected = VoiceImportSelection(name: "v1 test", modelVersion: "v1", language: "ja", transcript: "こんにちは。", gpt: "nene30-e15.ckpt", sovits: "nene30_e8_s328.pth", reference: "ref.wav")
+        let voice = try await service.install(selected, inspection: inspection, support: support) { _ in }
+        XCTAssertEqual(voice.modelVersion, "v1")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: voice.sovitsPath!))
+        selected.gpt = ""; selected.sovits = ""
+        do { _ = try await service.install(selected, inspection: inspection, support: support) { _ in }; XCTFail("Missing v1 pair accepted") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("v1 voices need")) }
+        try Data("06fixture".utf8).write(to: folder.appendingPathComponent("nene30_e8_s328.pth"))
+        let mismatch = try await service.inspect(folder: folder)
+        selected.gpt = "nene30-e15.ckpt"; selected.sovits = "nene30_e8_s328.pth"
+        do { _ = try await service.install(selected, inspection: mismatch, support: support) { _ in }; XCTFail("v2ProPlus header accepted as v1") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("v2ProPlus")) }
     }
 }

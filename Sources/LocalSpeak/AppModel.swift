@@ -326,6 +326,9 @@ import CoreAudio
         guard pair.allSatisfy({ $0.isEmpty }) || pair.allSatisfy({ !$0.isEmpty && FileManager.default.fileExists(atPath: $0) }) else {
             throw LocalError("Choose both existing checkpoints, or leave both empty for pretrained weights.")
         }
+        guard voice.modelVersion != "v1" || pair.allSatisfy({ !$0.isEmpty }) else {
+            throw LocalError("v1 voices need a matching GPT and SoVITS checkpoint pair.")
+        }
         var saved = voice
         let folder = Paths.support.appendingPathComponent("references")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

@@ -24,7 +24,7 @@ import UniformTypeIdentifiers
     @Published private(set) var catalogue: VoiceCatalogueEntry?
 
     var selection: VoiceImportSelection { VoiceImportSelection(name: name, modelVersion: version, language: language, transcript: transcript, gpt: gpt, sovits: sovits, reference: reference, localReference: localReference) }
-    var canImport: Bool { inspection != nil && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && VoiceImportRules.versions.contains(version) && ["en", "zh", "ja"].contains(language) && !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && gpt.isEmpty == sovits.isEmpty && (!reference.isEmpty || localReference != nil) && reviewed && !busy }
+    var canImport: Bool { inspection != nil && !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && VoiceImportRules.versions.contains(version) && ["en", "zh", "ja"].contains(language) && !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && gpt.isEmpty == sovits.isEmpty && (version != "v1" || !gpt.isEmpty) && (!reference.isEmpty || localReference != nil) && reviewed && !busy }
     var selectedBytes: Int64 { inspection?.files.filter { [gpt, sovits, reference].contains($0.path) }.reduce(0) { $0 + $1.size } ?? 0 }
 
     func changeLocation(_ value: String) {
@@ -162,7 +162,7 @@ struct VoiceImportView: View {
                         }
                         Text("Exact reference transcript").font(.headline)
                         TextEditor(text: $importer.transcript).font(.body).frame(height: 72).border(.quaternary)
-                        Text("Fill in any missing fields. v1/v3/v4 checkpoints are unsupported. A repository can contain several voices or training epochs; choose a matching pair.").font(.caption).foregroundStyle(.secondary)
+                        Text("Fill in any missing fields. v1 requires both checkpoints; v3/v4 checkpoints are unsupported. A repository can contain several voices or training epochs; choose a matching pair.").font(.caption).foregroundStyle(.secondary)
                         Divider()
                         Text(importer.catalogue?.license ?? inspection.license).font(.callout).textSelection(.enabled)
                         HStack {
@@ -175,7 +175,7 @@ struct VoiceImportView: View {
                         Text("PyTorch checkpoints can execute code when loaded. Only import a source you trust. Import reads metadata and copies files; synthesis loads the checkpoints.").font(.caption).foregroundStyle(.secondary)
                         Toggle("I trust this source and have reviewed its terms", isOn: $importer.reviewed)
                     } else if !importer.busy {
-                        Text("Supported: GPT-SoVITS v2, v2Pro, and v2ProPlus. Reference audio, matching .lab/.txt files, GPT-SoVITS .list transcripts, and local-tts-mic.voice.json metadata are detected when supplied.").font(.callout).foregroundStyle(.secondary)
+                        Text("Supported: GPT-SoVITS v1, v2, v2Pro, and v2ProPlus. Reference audio, matching .lab/.txt files, GPT-SoVITS .list transcripts, and local-tts-mic.voice.json metadata are detected when supplied.").font(.callout).foregroundStyle(.secondary)
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading).disabled(importer.busy)
             }

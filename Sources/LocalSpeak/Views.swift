@@ -433,13 +433,13 @@ struct VoiceEditor: View {
                     Text("Exact transcript")
                     TextEditor(text: $voice.transcript).font(.body).frame(height: 100).border(.quaternary)
                 }
-                Picker("Model version", selection: $voice.modelVersion) { ForEach(["v2ProPlus", "v2Pro", "v2"], id: \.self) { Text($0).tag($0) } }
+                Picker("Model version", selection: $voice.modelVersion) { ForEach(VoiceImportRules.versions.reversed(), id: \.self) { Text($0).tag($0) } }
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Custom checkpoints (optional)").font(.headline)
-                    Text("Leave both empty for the pretrained model. Imported checkpoints must match the model version above. Only open model files you trust.").font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text("v1 requires both checkpoints. Leave both empty for the installed v2ProPlus pretrained model. Imported checkpoints must match the model version above. Only open model files you trust.").font(.system(size: 11)).foregroundStyle(.secondary)
                     checkpointRow("GPT", path: $voice.gptPath)
                     checkpointRow("SoVITS", path: $voice.sovitsPath)
-                    Button("Use pretrained weights") { voice.gptPath = nil; voice.sovitsPath = nil }
+                    Button("Use pretrained weights") { voice.gptPath = nil; voice.sovitsPath = nil; voice.modelVersion = "v2ProPlus" }
                 }.padding(.top, 8)
             }.textFieldStyle(.roundedBorder)
             if let error { Text(error).font(.system(size: 12)).foregroundStyle(.red) }
