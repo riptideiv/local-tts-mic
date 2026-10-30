@@ -1,21 +1,29 @@
-# Publishing the source preview
+# Releasing
 
-Release checklist for [riptideiv/local-tts-mic](https://github.com/riptideiv/local-tts-mic). Publication is performed separately from the preparation scripts.
+Release procedure for [riptideiv/local-tts-mic](https://github.com/riptideiv/local-tts-mic). Builders create local artifacts; publication is a separate, explicit operation.
 
-1. Review `docs/RELEASE_REVIEW.md` and the diff against main. Run `./scripts/test.sh` and `./scripts/build.sh`; inspect signature checks. Full synthesis and real routing are separate from unit/driver tests.
-2. On an Apple Silicon Mac, run setup and `python3 scripts/doctor.py`. Run `runtime/.venv/bin/python scripts/validate_engine.py --device cpu` and `runtime/.venv/bin/python scripts/validate_lifecycle.py`. Before claiming call compatibility, manually confirm received audio in the target call app.
-3. Ensure only intended source/assets are tracked. `git ls-files` should contain no runtime, model weights, secrets, build outputs, or personal recordings. Keep THIRD_PARTY.md and the public-domain sample attribution.
-4. Merge/review the release branch and commit the result. From a clean source tree run `python3 scripts/package-source.py`. It archives committed HEAD only, refuses private/generated paths, and writes SHA256SUMS. Inspect with `tar -tzf build/release/local-tts-mic-1.1.0-source.tar.gz`. Then enter `build/release/` and run `shasum -a 256 -c SHA256SUMS`.
-5. Publish the reviewed source to `riptideiv/local-tts-mic`. Description: **Native macOS typing microphone. Local GPT-SoVITS speech, a global overlay, private preview, and a virtual mic.** Topics: `macos`, `swiftui`, `text-to-speech`, `gpt-sovits`, `local-first`, `virtual-microphone`, `accessibility`, `apple-silicon`.
-6. Enable Issues and private vulnerability reporting. Confirm the LICENSE is recognized. Let Actions pass on the actual public repo before advertising green CI. Add a social preview using a real interface screenshot; avoid fake ratings, download counts, or speed claims.
-7. Tag `v1.1.0` at the reviewed commit and draft a **pre-release** titled **Local TTS Mic 1.1.0 — Apple Silicon source preview**. Use CHANGELOG.md plus supported hardware, setup size, source-root dependency, ad-hoc signing, and separate voice/model terms. Attach the source archive and SHA256SUMS. Do not attach the locally built `.app` or driver package as a portable release.
-8. Open the public README logged out: images, relative docs, sample audio and installation steps must resolve. Use `https://github.com/riptideiv/local-tts-mic` in any announcement.
-9. Follow `docs/LAUNCH.md`, rechecking each community’s current rules immediately before posting. Owner review and actual public URLs are required. Remain available for setup failures and substantive questions.
+1. Merge reviewed feature PRs. Update `VERSION`, CHANGELOG.md, installation documentation, and download links on a release branch. Keep version numbers in the app, installer receipts, release tag, and asset names consistent.
+2. Run the model-free tests, native build, driver harness/sanitizers, source hygiene checks, and signature verification. Let GitHub Actions pass on the exact release source. Record real synthesis, model switching, routing, and installed-Mac tests separately from unit coverage.
+3. Keep models, private recordings, local settings, logs, caches, and secrets out of Git. Preserve LICENSE and THIRD_PARTY.md; inspect bundled dependency notices. Community models/references are downloaded or imported separately, with their own terms.
+4. From a clean release checkout, run `python3 scripts/package-macos.py` (or the signed command below) and `python3 scripts/package-source.py`. The source packager archives committed HEAD and rejects private/generated paths. Inspect/extract both outputs. Confirm bundle version, architecture/OS checks, portable runtime paths, source/worker contents, and code seal. Exercise the extracted app with isolated test data; this does not replace an installed-Mac test.
+5. Assemble the `.pkg`, `local-tts-mic-<version>-source.tar.gz`, and one `SHA256SUMS` covering both artifacts. Verify checksums before upload. Prepare release notes with platform requirements, first-run download/storage needs, the driver audio restart, signing status, supported checkpoint versions, and known limitations.
+6. Tag the exact release source and create a draft GitHub release. Upload only the reviewed artifacts, verify their remote names/sizes/digests, then publish. Do not overwrite an existing release/tag with different source or silently replace a published binary. A correction gets a new version.
+7. Open the public README/release page and verify download links, images, documentation, and assets. Announcements are separate from publication and require their own authorization.
 
-## macOS installer development
+## Current binary preview
 
-See [macOS packaging](MACOS_PACKAGING.md) for the local app-and-driver installer, its first-run model setup, signing inputs, and validation requirements. The current package is a local test artifact and has not been attached to a GitHub release.
+Version 1.2.0 is an **unsigned, unnotarized preview** for Apple Silicon on macOS 15+. It must be labelled accordingly in the asset filename, release notes, and installation docs. The app has an ad-hoc code seal; the installer has no Developer ID Installer signature. Do not call it notarized, Gatekeeper-verified, or certified on clean Macs. The preceding installer was reported working by the owner; broader fresh setup, memory, call-app, and uninstall/upgrade testing remains pending.
 
-## Before distributing a binary
+The 1.1.0 release remains the earlier source-only preview. Do not attach the new installer to that older source tag.
 
-Packaged builds use a portable bundled Python runtime and per-user first-run provisioning. Obtain Developer ID identities; sign all nested code and the privileged installer; notarize/staple the app/package; verify with Gatekeeper on a clean Mac. Include notices for every redistributed component and confirm model/reference redistribution rights. Never label an ad-hoc build “notarized.” Those credentials and clean-machine validation cannot be supplied by a local source patch.
+## Signed distribution
+
+A Developer ID Application identity and Developer ID Installer identity are required for the signed path. Apple Development identities are not substitutes. The notarization Keychain profile must already exist:
+
+```sh
+export DEVELOPER_ID_APPLICATION='Developer ID Application: …'
+export DEVELOPER_ID_INSTALLER='Developer ID Installer: …'
+python3 scripts/package-macos.py --sign --notarize local-tts-mic
+```
+
+See [macOS packaging](MACOS_PACKAGING.md) for nested signing, portability checks, embedded driver repair packages, notarization/stapling, and clean-Mac validation. An unsigned preview does not establish those signed-distribution checks.

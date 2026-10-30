@@ -1,6 +1,6 @@
 # macOS installer
 
-The installer is under development and is currently a local test artifact. No `.pkg` has been uploaded to a GitHub release.
+The [1.2.0 preview release](https://github.com/riptideiv/local-tts-mic/releases/tag/v1.2.0) includes an unsigned, unnotarized app-and-driver installer. It is an early binary preview; Developer ID signing, notarization, Gatekeeper acceptance, and setup on additional clean Macs remain pending.
 
 ## Installation flow
 
@@ -33,7 +33,7 @@ The builder provisions Python 3.11.15, installs the pinned dependency lock into 
 
 Output is in `build/distribution/`:
 
-- `local-tts-mic-1.1.0-arm64-unsigned.pkg`: local test installer.
+- `local-tts-mic-1.2.0-arm64-unsigned.pkg`: unsigned preview installer.
 - `SHA256SUMS`: installer checksum.
 - `app-root/Applications/Local TTS Mic.app`: staged portable app.
 
@@ -49,7 +49,7 @@ export DEVELOPER_ID_INSTALLER='Developer ID Installer: …'
 python3 scripts/package-macos.py --sign --notarize local-tts-mic
 ```
 
-The notarization profile must already exist in Keychain. The build signs nested native libraries, Python and its JIT entitlements, the app, the driver, and the installer. The embedded driver-repair installer and final combined installer are submitted and stapled separately. The final step verifies Gatekeeper. Without signing credentials, the output is named `-unsigned.pkg` and is a local test artifact.
+The notarization profile must already exist in Keychain. The build signs nested native libraries, Python and its JIT entitlements, the app, the driver, and the installer. The embedded driver-repair installer and final combined installer are submitted and stapled separately. The final step verifies Gatekeeper. Without signing credentials, the output is named `-unsigned.pkg` and must be clearly identified as unsigned and unnotarized.
 
 References: [Apple package signing](https://help.apple.com/xcode/mac/current/en.lproj/deve51ce7c3d.html), [notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution), [uv standalone Python distributions](https://docs.astral.sh/uv/concepts/python-versions/).
 
@@ -57,7 +57,7 @@ References: [Apple package signing](https://help.apple.com/xcode/mac/current/en.
 
 Test the signed/notarized installer on a second Apple Silicon Mac without developer tools, including installation, first-run downloads, Preview, a received-audio call test, repair, upgrade, and removal. Review the bundled Python dependency and dictionary notices. Check the driver restart notice and the installer’s architecture/OS restrictions. Do not treat successful payload extraction as an installed-driver or Gatekeeper test.
 
-The current work does not upload this package or create a GitHub release.
+The builder creates local artifacts only. Publishing a GitHub release is a separate, explicit step; see [releasing](RELEASING.md).
 
 ## Local validation
 
@@ -67,4 +67,8 @@ The current work does not upload this package or create a GitHub release.
 - A relocated, read-only app completed packaged setup and a real CPU private Preview. First audio in that run was 5.5 seconds. Its bundle seal remained valid after setup and speech generation.
 - The native first-run setup sheet was reviewed. Starting setup showed its download phases; Cancel download stopped it, retained completed files, left no completion marker, and enabled retry.
 - The setup test used APFS clones of previously verified public model, reference, and language-data caches, plus a fresh pinned FFmpeg download. This does not establish fresh-download performance or behavior on a second Mac.
-- Developer ID signing, notarization, Gatekeeper acceptance, installing the combined package into `/Applications`, and restarting the system audio driver have not been tested in this pass. No package has been uploaded or published.
+- Developer ID signing, notarization, Gatekeeper acceptance, installing the combined package into `/Applications`, and restarting the system audio driver have not been tested in this pass. The owner subsequently reported that the v1 test installer works. This is not a second-Mac or fresh-download certification.
+
+## 1.2.0 release validation
+
+The release uses the v1 implementation from PR #4, with the app/package version updated to 1.2.0. Automated CI covers 24 Swift tests, 35 Python tests, the native build, driver harness/sanitizers, and ad-hoc signature verification. The preceding v1 package completed private Japanese synthesis using its bundled runtime; the owner reported a successful install/test. Community weights and reference recordings remain downloads/imports, not bundled assets.

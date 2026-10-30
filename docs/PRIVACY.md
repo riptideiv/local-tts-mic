@@ -10,6 +10,8 @@ Normal synthesis uses a Python child process over local stdin/stdout pipes. Ther
 | Model files and caches | `runtime/`; retained for offline operation |
 | Training UI | `127.0.0.1:9874`, sharing disabled; use only on a trusted local machine |
 
+For packaged installs, `runtime/` in the table means `~/Library/Application Support/Local Speak/Managed/runtime/`. Source builds use `runtime/` in their checkout.
+
 The visible conversation is session-only, but its audio is **not automatically erased**. Delete old session directories while the app is closed. Exports remain wherever you save them. Nothing in these runtime folders is included in source packages by the release script.
 
 Normal operation does not record the physical microphone. Explicit loopback/queue diagnostics request input access and bind capture to the Local TTS Mic UID. Audio you send into a call is subject to the receiving app and other participants’ privacy/recording behavior.
