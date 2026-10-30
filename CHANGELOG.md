@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — installer preview
 
 - GPT-SoVITS v1 checkpoint import and synthesis, with v1/v2 architecture headers, version mismatch errors, and reference-cache invalidation when changing models.
 
@@ -8,7 +8,7 @@
 - Small community voice catalogue; private voice previews preserve the selected broadcast voice.
 
 - Local app-and-driver `.pkg` builder with a standalone Python runtime and first-run model downloads. Packaged users do not need Terminal, Git, Homebrew, or developer tools.
-- Per-user model storage, portable app paths, cancellable setup with retry, and signing/notarization support. Installer remains a local test artifact pending signing and clean-Mac validation.
+- Per-user model storage, portable app paths, cancellable setup with retry, and signing/notarization support. Unsigned installer preview is available on GitHub Releases. Developer ID signing, notarization, and broader clean-Mac validation remain pending.
 
 
 ## 1.1.0 — public source preview
@@ -20,4 +20,4 @@
 - SHA-256 verification for supplemental models/reference downloads, resumable-download recovery, and stale-cancellation isolation.
 - MIT project license and separate third-party terms; public docs omit machine-specific custom voices and prototype copies.
 
-This is a source build. Runtime/models are downloaded into the project folder. No portable/notarized binary or automatic updater is provided. Prior machine-specific validation is recorded in VALIDATION.md.
+The 1.1.0 release was a source build. Runtime/models were downloaded into the project folder. No portable/notarized binary or automatic updater was provided. Prior machine-specific validation is recorded in VALIDATION.md.

@@ -2,7 +2,7 @@
 """Build a relocatable Apple Silicon app and app+microphone Installer package.
 
 Development tools are required on the builder, never on the recipient's Mac.
-Unsigned packages are local test artifacts; --sign requires Developer ID identities.
+Unsigned packages must be labelled as previews; --sign requires Developer ID identities.
 """
 import argparse
 import hashlib
@@ -268,7 +268,7 @@ def main():
         run('spctl', '--assess', '--type', 'install', '--verbose', output)
     (BUILD / 'SHA256SUMS').write_text(f'{digest(output)}  {output.name}\n')
     print(f'\nInstaller: {output}')
-    if not args.sign: print('LOCAL TEST ONLY: unsigned and not notarized. Do not publish as a normal consumer download.')
+    if not args.sign: print('UNSIGNED PREVIEW: not Developer ID signed or notarized. Clearly label this limitation if publishing.')
 
 
 if __name__ == '__main__':
