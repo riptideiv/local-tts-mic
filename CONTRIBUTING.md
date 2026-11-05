@@ -33,3 +33,5 @@ For delivery changes, also capture real virtual-input audio using the commands i
 The lockfile records the working Python environment; do not mass-update it without a clean setup + real inference/lifecycle check. Model/checksum pin changes require a reviewed source and terms check. Preserve Apple and upstream notices. Never commit runtime assets, personal recordings, logs, generated driver sources, secrets, or build outputs.
 
 Use the PR template to explain the user-visible problem, resulting behavior, and actual validation. For release preparation, see `docs/RELEASING.md`.
+
+For the local app-and-driver installer build and its validation requirements, see [macOS packaging](docs/MACOS_PACKAGING.md).

@@ -32,7 +32,7 @@ def main():
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     (args.output / "SHA256SUMS").write_text(f"{digest}  {archive.name}\n")
     print(archive)
-    print("Source preview only. Build locally; an ad-hoc app is not a portable/notarized download.")
+    print("Source archive only. Installer artifacts are built separately with scripts/package-macos.py.")
 
 
 if __name__ == "__main__":

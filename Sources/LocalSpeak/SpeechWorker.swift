@@ -34,9 +34,9 @@ private final class LineReader {
 
     func start(device: String) throws {
         stop()
-        let python = Paths.runtime.appendingPathComponent(".venv/bin/python")
+        let python = Paths.python
         guard FileManager.default.isExecutableFile(atPath: python.path) else {
-            throw LocalError("The speech runtime is missing. Run scripts/setup.sh from the project folder, then restart the engine.")
+            throw LocalError("The speech runtime is missing. Open Audio → Setup / repair runtime.")
         }
         try FileManager.default.createDirectory(at: Paths.session, withIntermediateDirectories: true)
         let logURL = Paths.runtime.appendingPathComponent("logs/engine.log")
@@ -48,11 +48,12 @@ private final class LineReader {
         let p = Process(), stdin = Pipe(), stdout = Pipe(), reader = LineReader()
         let currentToken = UUID(); token = currentToken
         p.executableURL = python
-        p.arguments = ["-u", Paths.root.appendingPathComponent("engine/worker.py").path,
+        p.arguments = ["-u", Paths.source.appendingPathComponent("engine/worker.py").path,
                        "--root", Paths.root.path, "--device", device, "--output", Paths.session.path]
         p.currentDirectoryURL = Paths.root
         var env = ProcessInfo.processInfo.environment
-        env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["PATH"] = Paths.searchPath
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
         env["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
         env["OMP_NUM_THREADS"] = "6"
         env["GRADIO_ANALYTICS_ENABLED"] = "False"
