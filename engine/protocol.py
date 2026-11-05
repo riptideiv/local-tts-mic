@@ -3,7 +3,7 @@ from pathlib import Path
 import uuid
 
 LANGUAGES = {"auto", "en", "zh", "ja"}
-VERSIONS = {"v2", "v2Pro", "v2ProPlus"}
+VERSIONS = {"v1", "v2", "v2Pro", "v2ProPlus"}
 
 
 def validate_job(command):
@@ -20,12 +20,14 @@ def validate_job(command):
     if not voice.get("transcript", "").strip():
         raise ValueError("The reference clip needs its exact transcript.")
     if voice.get("modelVersion") not in VERSIONS:
-        raise ValueError("Supported models: v2, v2Pro, v2ProPlus.")
+        raise ValueError("Supported models: v1, v2, v2Pro, v2ProPlus.")
     if not Path(voice.get("referencePath", "")).is_file():
         raise ValueError("The reference clip is missing. Edit this voice and choose it again.")
     pair = [voice.get("gptPath", ""), voice.get("sovitsPath", "")]
     if any(pair) and not all(pair):
         raise ValueError("Choose both the GPT and SoVITS checkpoints.")
+    if voice["modelVersion"] == "v1" and not all(pair):
+        raise ValueError("v1 voices need a matching GPT and SoVITS checkpoint pair. Use v2ProPlus for the installed pretrained model.")
     for p in filter(None, pair):
         if not Path(p).is_file():
             raise ValueError(f"Checkpoint is missing: {Path(p).name}")

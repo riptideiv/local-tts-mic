@@ -15,7 +15,7 @@ import plistlib,sys
 from pathlib import Path
 app, root = sys.argv[1:]
 info = dict(CFBundleExecutable='LocalSpeak', CFBundleIdentifier='local.localspeak.app',
-    CFBundleName='Local TTS Mic', CFBundleDisplayName='Local TTS Mic', CFBundleVersion='4',
+    CFBundleName='Local TTS Mic', CFBundleDisplayName='Local TTS Mic', CFBundleVersion='5',
     CFBundleShortVersionString=Path(root, 'VERSION').read_text().strip(), CFBundlePackageType='APPL', LSMinimumSystemVersion='14.0',
     NSHighResolutionCapable=True, CFBundleIconFile='AppIcon.icns', LocalSpeakRoot=root,
     NSMicrophoneUsageDescription='Record the virtual microphone during an explicit routing test.')

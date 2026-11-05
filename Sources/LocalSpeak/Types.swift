@@ -2,20 +2,36 @@ import Foundation
 import AppKit
 
 enum Paths {
-    static let root: URL = {
-        if let value = ProcessInfo.processInfo.environment["LOCALSPEAK_ROOT"] ?? Bundle.main.object(forInfoDictionaryKey: "LocalSpeakRoot") as? String {
-            return URL(fileURLWithPath: value)
-        }
-        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-    }()
-    static let runtime = root.appendingPathComponent("runtime")
+    static let packaged = Bundle.main.object(forInfoDictionaryKey: "LocalSpeakPackaged") as? Bool == true
     static let support: URL = {
         if let path = ProcessInfo.processInfo.environment["LOCALSPEAK_SUPPORT"] { return URL(fileURLWithPath: path) }
         return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Local Speak")
     }()
+    static let root: URL = {
+        if let path = ProcessInfo.processInfo.environment["LOCALSPEAK_ROOT"] { return URL(fileURLWithPath: path) }
+        if packaged { return support.appendingPathComponent("Managed") }
+        if let path = Bundle.main.object(forInfoDictionaryKey: "LocalSpeakRoot") as? String { return URL(fileURLWithPath: path) }
+        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    }()
+    // Packaged code is read-only; downloaded models and generated files are per-user.
+    static let source = packaged ? Bundle.main.resourceURL!.appendingPathComponent("LocalTTSMic") : root
+    static let runtime = root.appendingPathComponent("runtime")
+    static let python = packaged ? source.appendingPathComponent("python/bin/python3") : runtime.appendingPathComponent(".venv/bin/python")
+    static var searchPath: String {
+        let bundled = runtime.appendingPathComponent("bin").path + ":" + python.deletingLastPathComponent().path
+        return bundled + (packaged ? ":/usr/bin:/bin:/usr/sbin:/sbin" : ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin")
+    }
     static let session = runtime.appendingPathComponent("sessions/\(UUID().uuidString)")
     static let settings = support.appendingPathComponent("settings.json")
     static let voices = support.appendingPathComponent("voices.json")
+    static var runtimeReady: Bool {
+        guard FileManager.default.isExecutableFile(atPath: python.path) else { return false }
+        if !packaged { return true }
+        guard let expected = loadJSON([String: String].self, from: source.appendingPathComponent("runtime-manifest.json")),
+              let installed = loadJSON([String: String].self, from: runtime.appendingPathComponent("setup-complete.json")),
+              expected["runtimeID"] == installed["runtimeID"] else { return false }
+        return FileManager.default.fileExists(atPath: runtime.appendingPathComponent("starter-voices.json").path)
+    }
 }
 
 struct VoiceProfile: Codable, Identifiable, Equatable {
@@ -30,6 +46,7 @@ struct VoiceProfile: Codable, Identifiable, Equatable {
     var license: String?
     var gptPath: String?
     var sovitsPath: String?
+    var catalogueID: String?
 
     var languageName: String { languageLabel(language) }
     var isStarter: Bool { id.hasPrefix("starter-") }
